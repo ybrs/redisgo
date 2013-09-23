@@ -967,8 +967,21 @@ func (client *Client) Zrevrange(key string, start int, end int) ([][]byte, error
     return res.([][]byte), nil
 }
 
-func (client *Client) Zrevrangebyscore(key string, start float64, end float64) ([][]byte, error) {
-    res, err := client.sendCommand("ZREVRANGEBYSCORE", key, strconv.FormatFloat(start, 'f', -1, 64), strconv.FormatFloat(end, 'f', -1, 64))
+func (client *Client) Zrevrangebyscore(key string, start float64, end float64, offset, count int64, withscores bool) ([][]byte, error) {
+
+    args := []string{key, strconv.FormatFloat(start, 'f', -1, 64), strconv.FormatFloat(end, 'f', -1, 64)}
+
+    if (offset >= 0) && (count > 0) {
+        args = append(args, "LIMIT")
+        args = append(args, strconv.FormatInt(offset, 10))
+        args = append(args, strconv.FormatInt(count, 10))
+    }
+
+    if withscores {
+        args =  append(args, "WITHSCORES")
+    }
+
+    res, err := client.sendCommand("ZREVRANGEBYSCORE", args...)
     if err != nil {
         return nil, err
     }
